@@ -1,6 +1,7 @@
 import React from 'react';
 import GoogleApiComponent from '../lib/GoogleApiComponent';
 import Map from '../components/Map';
+import Marker from '../components/Marker';
 const __GAPI_KEY__ = 'AIzaSyAyesbQMyKVVbBgKVi2g6VX7mop2z96jBo';
 
 export class App extends React.Component {
@@ -10,6 +11,10 @@ export class App extends React.Component {
             pos: {
                 lat: '12.12312',
                 lng: '-12.34234'
+            },
+            inputs: {
+                lat: '',
+                lng: ''
             }
         }
 
@@ -18,72 +23,63 @@ export class App extends React.Component {
         this.handleDragend = this.handleDragend.bind(this);
         this.handleLatChange = this.handleLatChange.bind(this);
         this.handleLngChange = this.handleLngChange.bind(this);
+        this.initialInputs = this.initialInputs.bind(this);
     }
 
-    componentDidMount() {
-        if(navigator && navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(pos => {
-                const coords = pos.coords;
-                
-                this.setState({
-                    pos: {
-                        lat: coords.latitude,
-                        lng: coords.longitude
-                    }
-                })
-            })
-        }
-    }
-    handleDragend(map) {
-        const lat = map.center.lat();
-        const lng = map.center.lng();
-        const pos = {
-            lat,
-            lng
-        };
+    initialInputs(pos) {
         this.setState({
-            pos: {
-                lat,
-                lng
+            pos:{
+                lat: pos.lat,
+                lng: pos.lng
+            },
+            inputs: {
+                lat: pos.lat,
+                lng: pos.lng
             }
-        });
+        })
     }
 
     render() {
-        const {pos} = this.state;
-        console.log('rendered')
-        return(
+        const { pos } = this.state;
+        const { inputs } = this.state;
+        return (
             <div>
-                <Map google={this.props.google} pos={this.state.pos} onDragend={this.handleDragend}/>
-                <hr/>
+                <Map google={this.props.google} onInit={this.initialInputs.bind(null)}>
+                    <Marker pos={pos}/>
+                </Map>
+                <hr />
                 <input type="text" />
-                <hr/>
+                <hr />
                 <p>lat: </p>
-                <input type="text" value={this.state.pos.lat} onChange={this.handleLatChange} onBlur={this.handleLatBlur}/>
+                <input type="text" value={inputs.lat} onChange={this.handleLatChange} onBlur={this.handleLatBlur} />
                 <p>lng: </p>
-                <input type="text" value={pos.lng} onChange={this.handleLngChange} onBlur={this.handleLngBlur}/>
+                <input type="text" value={inputs.lng} onChange={this.handleLngChange} onBlur={this.handleLngBlur} />
             </div>
         );
+    }
+
+    handleDragend(map) {
+        // const lat = map.center.lat();
+        // const lng = map.center.lng();
+        // this.setState({
+        //     inputs: {
+        //         lat,
+        //         lng
+        //     }
+        // });
     }
 
     handleLatChange(e) {
         const value = e.target.value;
         this.setState({
-            pos:{
-                lat: value,
-                lng: this.state.pos.lng
-            }
+            inputs: { ...this.state.inputs, lat: value }
         })
     }
 
     handleLngChange(e) {
         const value = e.target.value;
-        console.log(value);
         this.setState({
-            pos: {
-                lat: this.state.pos.lat,
-                lng: value
-            }
+            inputs: Object.assign({}, this.state.inputs, { lng: value })
         })
     }
 
@@ -96,6 +92,7 @@ export class App extends React.Component {
             }
         });
     }
+
     handleLngBlur(e) {
         const lng = e.target.value;
         this.setState({
